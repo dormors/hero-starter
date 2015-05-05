@@ -177,10 +177,148 @@ var moves = {
   coward : function(gameData, helpers) {
     return helpers.findNearestHealthWell(gameData);
   }
+  
+    // The "Simplet"
+  // This hero will try help his nearby.
+  simplet : function(gameData, helpers) {
+    var hero = gameData.activeHero;
+    var hdirection='North'; // "Northerner" by default
+    var hval = -1000; // heuristic
+    var direction;
+    var dft = hero.distanceFromTop;
+    var dfl = hero.distanceFromLeft;
+    var directions = ['North', 'East', 'South', 'West'];
+    var hstay=0;
+    var hmv=0;
+    var hmoves = {
+      Stay: -1,
+      North: 0,
+      East: 0,
+      South: 0,
+      West: 0
+    }; 
+
+
+    // 1st pass
+    for (direction in directions) {
+      var nextTile = helpers.getTileNearby(board, dft, dfl, direction);
+      if (nextTile)
+      {
+	if (nextTile.type === 'HealthWell')
+	{
+	  hmoves[direction] += Math.min(30,(100-hero.health));
+	}
+	if (nextTile.type === 'DiamondMine')
+	{
+	  if (nextTile.owner.team !== hero.team)
+	  {
+	    hmoves[direction] += 5;
+	  }
+	}
+	if (nextTile.type === 'Hero')
+	{
+	  if (nextTile.team !== hero.team)
+	  {
+	    if (nextTile.health <= 30)
+	    {
+	      if (nextTile.health <= 20)
+	      {
+		hstay += 200;
+	      }
+	      else
+	      {
+		hmoves[direction] += 200;
+	      }
+	    }
+	    else
+	    {
+	      hmoves[direction] += Math.round((10 / nextTile.health) * 100);
+	      hstay += Math.round((20 / nextTile.health) * 100);
+	      hstay -= Math.round((30 / hero.health) * 100);
+	      hmv -= Math.round((20 / hero.health) * 100);
+	    }
+	  }
+	  else
+	  {
+	    hmoves[direction] += Math.min(40,(100-nextTile.health));
+	  }
+	}
+	if ((nextTile.type === 'Unoccupied') || (nextTile.type === 'Bones'))
+	{
+	  var ntdft = nextTile.distanceFromTop;
+	  var ntdfl = nextTile.distanceFromLeft;
+	  for (var mdirection in directions) {
+	    var moveTile = helpers.getTileNearby(board, ntdft, ntdfl, mdirection);
+	    if (moveTile)
+	    {
+	      if (moveTile.type === 'HealthWell')
+	      {
+		hmoves[direction] += Math.min(20,(100-hero.health));
+	      }
+	      if (moveTile.type === 'DiamondMine')
+	      {
+		if (moveTile.owner.team !== hero.team)
+		{
+		  hmoves[direction] += 1;
+		}
+	      }
+	      if (moveTile.type === 'Hero')
+	      {
+		if (moveTile.team !== hero.team)
+		{
+		  if (moveTile.health <= 20)
+		  {
+		    hmoves[direction] += 200;
+		  }
+		  else
+		  {
+		    hmoves[direction] += Math.round((20 / (moveTile.health - 20)) * 100);
+		    hmoves[direction] -= Math.round((30 / hero.health) * 100);
+		  }
+		  hstay -= Math.round((20 / hero.health) * 100);
+		}
+		else
+		{
+		  hmoves[direction] += Math.min(10,(100-moveTile.health));
+		}
+	      }
+	    }
+	  }
+	}
+	if (nextTile.type === 'Bones')
+	{
+	  hmoves[direction] +=1;
+	}
+      }
+
+    // 2nd pass
+    for (direction in directions) {
+      var nextTile = helpers.getTileNearby(board, dft, dfl, direction);
+      if (nextTile)
+      {
+	if ((nextTile.type === 'Unoccupied') || (nextTile.type === 'Bones'))
+	{
+	  hmoves[direction] +=hmv;
+	}
+	else 
+	{
+	  hmoves[direction] +=hstay;
+	}
+      }
+    }
+
+    for (direction in hmoves) {
+      if (hmoves[direction] > hval) {
+        hdirection = direction;
+        hval = hmoves[direction];
+      }
+    }
+    return hdirection;
+  }
  };
 
 //  Set our heros strategy
-var  move =  moves.aggressor;
+var  move =  moves.simplet;
 
 // Export the move function here
 module.exports = move;
