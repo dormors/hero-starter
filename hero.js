@@ -178,143 +178,221 @@ var moves = {
     return helpers.findNearestHealthWell(gameData);
   }
   
-    // The "Simplet"
+ // The "Simplet"
   // This hero will try help his nearby.
   simplet : function(gameData, helpers) {
-    var hero = gameData.activeHero;
+    var myhero = gameData.activeHero;
     var hdirection='North'; // "Northerner" by default
     var hval = -1000; // heuristic
-    var direction;
-    var dft = hero.distanceFromTop;
-    var dfl = hero.distanceFromLeft;
-    var directions = ['North', 'East', 'South', 'West'];
+    var myDirection;
+    var dft = myhero.distanceFromTop;
+    var dfl = myhero.distanceFromLeft;
     var hstay=0;
     var hmv=0;
     var hmoves = {
-      Stay: -1,
+      Stay: 0,
       North: 0,
       East: 0,
       South: 0,
       West: 0
-    }; 
+    };
+    var hlegalmoves = {
+      North: 0,
+      East: 0,
+      South: 0,
+      West: 0
+    };
 
+    var testNorth=helpers.getTileNearby(gameData.board, dft, dfl, 'North');
+    if (testNorth)
+    {
+      if (testNorth.type === 'Impassable')
+      {
+	hdirection='Stay';
+      }
+    }
+    else
+    {
+      hdirection='Stay';
+    }
 
     // 1st pass
-    for (direction in directions) {
-      var nextTile = helpers.getTileNearby(board, dft, dfl, direction);
-      if (nextTile)
+    for (myDirection in hlegalmoves) {
+      var myNextTile = helpers.getTileNearby(gameData.board, dft, dfl, myDirection);
+      if (myNextTile)
       {
-	if (nextTile.type === 'HealthWell')
+	if (myNextTile.type === 'Impassable')
 	{
-	  hmoves[direction] += Math.min(30,(100-hero.health));
+	  hlegalmoves[myDirection]=1;
 	}
-	if (nextTile.type === 'DiamondMine')
+	if (myNextTile.type === 'HealthWell')
 	{
-	  if (nextTile.owner.team !== hero.team)
+	  if (myhero.health < 100)
 	  {
-	    hmoves[direction] += 5;
+	    hmoves[myDirection] += Math.round((30 / myhero.health) * 100);
 	  }
 	}
-	if (nextTile.type === 'Hero')
+	if (myNextTile.type === 'DiamondMine')
 	{
-	  if (nextTile.team !== hero.team)
+	  if (myNextTile.owner)
 	  {
-	    if (nextTile.health <= 30)
+	    if (myNextTile.owner.team !== myhero.team)
 	    {
-	      if (nextTile.health <= 20)
+	      hmoves[myDirection] += 5;
+	    }
+	  }
+	  else
+	  {
+	    if (myhero.health == 100)
+	    {
+	      hmoves[myDirection] += 3;
+	    }
+	    else
+	    {
+	      hmoves[myDirection] -= 3;
+	    }
+	  }
+	}
+	if (myNextTile.type === 'Hero')
+	{
+	  if (myNextTile.team !== myhero.team)
+	  {
+	    if (myNextTile.health <= 30)
+	    {
+	      if (myNextTile.health <= 20)
 	      {
 		hstay += 200;
 	      }
 	      else
 	      {
-		hmoves[direction] += 200;
+		hmoves[myDirection] += 200;
 	      }
 	    }
 	    else
 	    {
-	      hmoves[direction] += Math.round((10 / nextTile.health) * 100);
-	      hstay += Math.round((20 / nextTile.health) * 100);
-	      hstay -= Math.round((30 / hero.health) * 100);
-	      hmv -= Math.round((20 / hero.health) * 100);
+	      hmoves[myDirection] += Math.round((10 / myNextTile.health) * 100);
+	      hstay += Math.round((20 / myNextTile.health) * 100);
+	      hstay -= Math.round((30 / (myhero.health - 20)) * 100);
+	      hmv -= Math.round((20 / myhero.health) * 100);
 	    }
 	  }
 	  else
 	  {
-	    hmoves[direction] += Math.min(40,(100-nextTile.health));
+	    hmoves[myDirection] += (100-myNextTile.health);
 	  }
 	}
-	if ((nextTile.type === 'Unoccupied') || (nextTile.type === 'Bones'))
+	if ((myNextTile.type === 'Unoccupied') || (myNextTile.type === 'Bones'))
 	{
-	  var ntdft = nextTile.distanceFromTop;
-	  var ntdfl = nextTile.distanceFromLeft;
-	  for (var mdirection in directions) {
-	    var moveTile = helpers.getTileNearby(board, ntdft, ntdfl, mdirection);
+	  var ntdft = myNextTile.distanceFromTop;
+	  var ntdfl = myNextTile.distanceFromLeft;
+	  for (var lDirection in hlegalmoves) {
+	    var moveTile = helpers.getTileNearby(gameData.board, ntdft, ntdfl, lDirection);
 	    if (moveTile)
 	    {
 	      if (moveTile.type === 'HealthWell')
 	      {
-		hmoves[direction] += Math.min(20,(100-hero.health));
+		hmoves[myDirection] += Math.min(20,(100-myhero.health));
 	      }
 	      if (moveTile.type === 'DiamondMine')
 	      {
-		if (moveTile.owner.team !== hero.team)
+		if (moveTile.owner)
 		{
-		  hmoves[direction] += 1;
+		  if (moveTile.owner.team !== myhero.team)
+		  {
+		    hmoves[myDirection] += 2;
+		  }
+		}
+		else
+		{
+		  hmoves[myDirection] += 1;
 		}
 	      }
 	      if (moveTile.type === 'Hero')
 	      {
-		if (moveTile.team !== hero.team)
+		if (moveTile.team !== myhero.team)
 		{
 		  if (moveTile.health <= 20)
 		  {
-		    hmoves[direction] += 200;
+		    hmoves[myDirection] += 200;
 		  }
 		  else
 		  {
-		    hmoves[direction] += Math.round((20 / (moveTile.health - 20)) * 100);
-		    hmoves[direction] -= Math.round((30 / hero.health) * 100);
+		    hmoves[myDirection] += Math.round((20 / (moveTile.health - 20)) * 100);
+		    hmoves[myDirection] -= Math.round((30 / myhero.health) * 100);
 		  }
-		  hstay -= Math.round((20 / hero.health) * 100);
+		  hstay -= Math.round((10 / myhero.health) * 100);
 		}
 		else
 		{
-		  hmoves[direction] += Math.min(10,(100-moveTile.health));
+		  hmoves[myDirection] += Math.min(20,(100-moveTile.health));
 		}
 	      }
 	    }
 	  }
 	}
-	if (nextTile.type === 'Bones')
+	if (myNextTile.type === 'Bones')
 	{
-	  hmoves[direction] +=1;
+	  hmoves[myDirection] +=1;
 	}
       }
+      else
+      {
+	hlegalmoves[myDirection]=1;
+      }
+    }
 
     // 2nd pass
-    for (direction in directions) {
-      var nextTile = helpers.getTileNearby(board, dft, dfl, direction);
-      if (nextTile)
+    for (myDirection in hlegalmoves) {
+      var myNextTile = helpers.getTileNearby(gameData.board, dft, dfl, myDirection);
+      if (myNextTile)
       {
-	if ((nextTile.type === 'Unoccupied') || (nextTile.type === 'Bones'))
+	if ((myNextTile.type === 'Unoccupied') || (myNextTile.type === 'Bones'))
 	{
-	  hmoves[direction] +=hmv;
+	  hmoves[myDirection] +=hmv;
 	}
 	else 
 	{
-	  hmoves[direction] +=hstay;
+	  hmoves[myDirection] +=hstay;
+	}
+      }
+    }
+    hmoves['Stay'] += hstay;
+
+    for (myDirection in hmoves) {
+      if (hmoves[myDirection] > hval) {
+	if (hlegalmoves[myDirection] == 0)
+	{
+	  hdirection = myDirection;
+	  hval = hmoves[myDirection];
 	}
       }
     }
 
-    for (direction in hmoves) {
-      if (hmoves[direction] > hval) {
-        hdirection = direction;
-        hval = hmoves[direction];
+    if ((hval == 0) && (myhero.health == 100))
+    {
+      hdirection=helpers.findNearestWeakerEnemy(gameData);
+
+      if (!hdirection)
+      {
+	hdirection=helpers.findNearestTeamMember(gameData);
       }
     }
+
+    var hWell=helpers.findNearestHealthWell(gameData);
+
+    if ((hval < 50) && (myhero.health <= 60))
+    {
+      hdirection=hWell;
+    }
+
+    if ((hval <= 0) && (myhero.health < 100))
+    {
+      hdirection=hWell;
+    }
+
     return hdirection;
   }
+
  };
 
 //  Set our heros strategy
