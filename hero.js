@@ -368,13 +368,18 @@ var moves = {
       }
     }
 
+
     if ((hval == 0) && (myhero.health == 100))
     {
-      hdirection=helpers.findNearestWeakerEnemy(gameData);
+      var otherdirection=helpers.findNearestWeakerEnemy(gameData);
 
-      if (!hdirection)
+      if (!otherdirection)
       {
-	hdirection=helpers.findNearestTeamMember(gameData);
+	otherdirection=helpers.findNearestTeamMember(gameData);
+      }
+      if (otherdirection)
+      {
+	hdirection=otherdirection;
       }
     }
 
