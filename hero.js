@@ -385,14 +385,17 @@ var moves = {
 
     var hWell=helpers.findNearestHealthWell(gameData);
 
-    if ((hval < 50) && (myhero.health <= 60))
+    if (hWell)
     {
-      hdirection=hWell;
-    }
+    	if ((hval < 50) && (myhero.health <= 60))
+    	{
+      	hdirection=hWell;
+    	}
 
-    if ((hval <= 0) && (myhero.health < 100))
-    {
-      hdirection=hWell;
+    	if ((hval <= 0) && (myhero.health < 100))
+    	{
+      	hdirection=hWell;
+    	}
     }
 
     return hdirection;
