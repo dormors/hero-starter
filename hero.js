@@ -383,22 +383,23 @@ var moves = {
       }
     }
 
-    var hWell = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
+    var hWell = helpers.findNearestObjectDirectionAndDistance(gameData.board, myhero, function(boardTile) {
       if (boardTile.type === 'HealthWell') {
         return true;
       }
     });
-    var distanceToHealthWell = hWell.distance;
-    var directionToHealthWell = hWell.direction;
+    
 
     if (hWell)
     {
+    	var distanceToHealthWell = hWell.distance;
+    	var directionToHealthWell = hWell.direction;
     	if ((hval < 50) && (myhero.health <= 60))
     	{
       	   hdirection=directionToHealthWell;
     	}
 
-    	if (((hval <= 0) || (distanceToHealthWell==1)) && (myhero.health < 100))
+    	if (((hval <= 0) || (distanceToHealthWell===1)) && (myhero.health < 100))
     	{
       	    hdirection=directionToHealthWell;
     	}
