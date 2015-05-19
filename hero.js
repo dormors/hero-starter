@@ -236,9 +236,12 @@ var moves = {
 	{
 	  if (myNextTile.owner)
 	  {
-	    if (myNextTile.owner.team !== myhero.team)
+	  	if (myhero.health == 100)
 	    {
-	      hmoves[myDirection] += 5;
+	    	if (myNextTile.owner.team !== myhero.team)
+	    	{
+	      	hmoves[myDirection] += 5;
+	    	}
 	    }
 	  }
 	  else
@@ -261,11 +264,11 @@ var moves = {
 	    {
 	      if (myNextTile.health <= 20)
 	      {
-		hstay += 200;
+					hstay += 200;
 	      }
 	      else
 	      {
-		hmoves[myDirection] += 200;
+					hmoves[myDirection] += 200;
 	      }
 	    }
 	    else
