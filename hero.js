@@ -293,7 +293,7 @@ var moves = {
 	      {
 		hmoves[myDirection] += Math.min(20,(100-myhero.health));
 	      }
-	      if (moveTile.type === 'DiamondMine')
+	      if ((moveTile.type === 'DiamondMine') && (myhero.health == 100))
 	      {
 		if (moveTile.owner)
 		{
